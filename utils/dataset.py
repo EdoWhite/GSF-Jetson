@@ -6,9 +6,7 @@ import os.path
 import numpy as np
 from numpy.random import randint
 import sys
-import h5py
 import io
-import gulpio2
 
 class VideoRecord(object):
     def __init__(self, row, multilabel):
@@ -425,34 +423,6 @@ class VideoDataset(data.Dataset):
                 segment_indices = self._get_test_indices_video(record)
             return self.get_video(record, segment_indices)
         
-        elif self.from_hdf5: 
-            if not self.sparse_sampling:
-                if not self.test_mode:
-                    segment_indices = self._sample_indices_video(record) if self.random_shift else self._get_val_indices_video(record)
-                else:
-                    segment_indices = self._get_test_indices_video(record)
-            else:
-                if not self.test_mode:
-                    segment_indices = self._sample_indices(record) if self.random_shift else self._get_val_indices(record)
-                else:
-                    segment_indices = self._get_test_indices(record)
-            if self.random_shuffling:
-                segment_indices = np.random.permutation(segment_indices)
-            return self.get_from_hdf5(record, segment_indices)
-        
-        elif self.from_gulp:
-            if not self.sparse_sampling:
-                if not self.test_mode:
-                    segment_indices = self._sample_indices_video(record) if self.random_shift else self._get_val_indices_video(record)
-                else:
-                    segment_indices = self._get_test_indices_video(record)
-            else:
-                if not self.test_mode:
-                    segment_indices = self._sample_indices(record) if self.random_shift else self._get_val_indices(record)
-                else:
-                    segment_indices = self._get_test_indices(record)
-            return self.get_from_gulp(record, segment_indices)
-        
         else:
             if not self.sparse_sampling:
                 if not self.test_mode:
@@ -525,135 +495,6 @@ class VideoDataset(data.Dataset):
                          'verb_label': record.label_verb,
                          'noun_label': record.label_noun}
                 
-            return process_data, label
-            
-
-    def get_from_hdf5(self, record, indices):
-        if self.num_clips > 1:
-            process_data_final = []
-            hdf5_video_key = record.path
-            if "something" in self.root_path.lower():
-                single_h5 = os.path.join(
-                    self.root_path, "Something-Something-v2-frames.h5"
-                )
-                if os.path.isfile(single_h5):
-                    if self.h5_file is None:
-                        self.h5_file = h5py.File(single_h5, "r")
-                    video_binary = self.h5_file[hdf5_video_key]
-                else:
-                    video_binary = h5py.File(os.path.join(self.root_path, "seq_h5_30fps", record.path+".h5"))[
-                        hdf5_video_key
-                    ]
-            else:
-                single_h5 = os.path.join(self.root_path, self.mode, record.path + ".h5")
-                video_binary = h5py.File(single_h5, "r")[record.path.split("/")[-1]]
-            for k in range(self.num_clips):
-                images = list()
-                for seg_ind in indices[k]:
-                    p = int(seg_ind)
-                    if self.multilabel:
-                        p = p + record.start_frame
-                    try:
-                        seg_imgs = [Image.open(io.BytesIO(video_binary[p])).convert("RGB")]
-                    except:
-                        seg_imgs = [Image.open(io.BytesIO(video_binary[p-1])).convert("RGB")]
-                    images.extend(seg_imgs)
-                    if p < record.num_frames:
-                        p += 1
-
-                process_data, label = self.transform((images, record.label))
-                process_data_final.append(process_data)
-            process_data_final = torch.stack(process_data_final, 0)#
-            if self.multilabel:
-                label = {'action_label': record.label,
-                         'verb_label': record.label_verb,
-                         'noun_label': record.label_noun}
-            return process_data_final, label
-
-        else:
-            images = list()
-            if self.multilabel:
-                indices = indices + record.start_frame
-            hdf5_video_key = record.path
-            if "something" in self.root_path.lower():
-                single_h5 = os.path.join(
-                    self.root_path, "Something-Something-v2-frames.h5"
-                )
-                if os.path.isfile(single_h5):
-                    if self.h5_file is None:
-                        self.h5_file = h5py.File(single_h5, "r")
-                    video_binary = self.h5_file[hdf5_video_key]
-                else:
-                    video_binary = h5py.File(os.path.join(self.root_path, "seq_h5_30fps", record.path+".h5"))[
-                        hdf5_video_key
-                    ]
-            else:
-                single_h5 = os.path.join(self.root_path, self.mode, record.path + ".h5")
-                video_binary = h5py.File(single_h5, "r")[record.path.split("/")[-1]]
-            indices = self._sample_indices(None, len(video_binary)-1) if self.random_shift else self._get_val_indices(None, len(video_binary)-1)
-            for seg_ind in indices:
-                p = int(seg_ind)
-                try:
-                    seg_imgs = [Image.open(io.BytesIO(video_binary[p])).convert("RGB")]
-                except:
-                    print(record.path, p, len(video_binary))
-                images.extend(seg_imgs)
-                if p < record.num_frames:
-                    p += 1
-            process_data, label = self.transform((images, record.label))
-            if self.multilabel:
-                # print('multilabel')
-                label = {'action_label': record.label,
-                         'verb_label': record.label_verb,
-                         'noun_label': record.label_noun}
-            return process_data, label
-            
-    def get_from_gulp(self, record, indices):
-        if self.num_clips > 1:
-            process_data_final = []
-            video_id = record.path
-            video_data = self.gulp[video_id][0]
-            for k in range(self.num_clips):
-                images = list()
-                for seg_ind in indices[k]:
-                    p = int(seg_ind)
-                    if self.multilabel:
-                        p = p + record.start_frame
-                    seg_imgs = Image.fromarray(video_data[p])
-                    images.extend(seg_imgs)
-                    if p < record.num_frames:
-                        p += 1
-
-                process_data, label = self.transform((images, record.label))
-                process_data_final.append(process_data)
-            process_data_final = torch.stack(process_data_final, 0)#
-            if self.multilabel:
-                label = {'action_label': record.label,
-                         'verb_label': record.label_verb,
-                         'noun_label': record.label_noun}
-            return process_data_final, label
-
-        else:
-            images = list()
-            video_id = record.path
-            video_data = self.gulp[video_id][0]
-            
-            for seg_ind in indices:
-                p = int(seg_ind)
-                try:
-                    seg_imgs = [Image.fromarray(video_data[p])]
-                except:
-                    print(record.path, p, len(video_data))
-                images.extend(seg_imgs)
-                if p < record.num_frames:
-                    p += 1
-            # print(len(images), images[0].shape, type(images[0]))
-            process_data, label = self.transform((images, record.label))
-            if self.multilabel:
-                # print('multilabel')
-                label = {'action_label': record.label,
-                         'verb_label': record.label_verb,
-                         'noun_label': record.label_noun}
             return process_data, label
 
 

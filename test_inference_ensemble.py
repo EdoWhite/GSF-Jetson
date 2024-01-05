@@ -3,10 +3,8 @@ import time
 import torchvision
 from torch.cuda import amp
 import numpy as np
-from scipy import stats as st
 import torch.nn.parallel
 import torch.optim
-from sklearn.metrics import confusion_matrix, accuracy_score, top_k_accuracy_score
 from utils.dataset import VideoDataset
 from models import VideoModel
 from utils.transforms import *
@@ -17,7 +15,6 @@ from torch.nn import functional as F
 import sys
 import pickle as pkl
 import os
-import torch_tensorrt
 from torch2trt import TRTModule
 from torch2trt import torch2trt
 
