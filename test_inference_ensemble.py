@@ -18,6 +18,8 @@ import sys
 import pickle as pkl
 import os
 import torch_tensorrt
+from torch2trt import TRTModule
+from torch2trt import torch2trt
 
 """
 Costretto a rimuovere una coppia di modelli perchè un modello RGB (IncV3, 64Seg, 32Batch) è troppo grosso per essere caricato in memoria. 
