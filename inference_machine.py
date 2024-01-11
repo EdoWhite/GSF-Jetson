@@ -8,6 +8,7 @@ import time
 def inference():
     # Implement the inference logic here
     # Placeholder return
+    print("Doing inference.....")
     return 0
 
 def save_frame(frame, folder):
