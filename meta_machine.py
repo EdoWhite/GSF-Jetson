@@ -29,6 +29,17 @@ def get_frames(rgb_path, depth_path):
 
     return encoded_rgb_frame.tobytes(), encoded_depth_frame.tobytes()
 
+def send_frame(client_socket, frame_type, frame):
+    # Send frame type (e.g., 'RGB' or 'DEPTH')
+    client_socket.sendall(frame_type)
+
+    # Send the length of the frame data
+    length = len(frame)
+    client_socket.sendall(length.to_bytes(16, 'big'))  # Send the length as 16 bytes
+
+    # Send the frame data
+    client_socket.sendall(frame)
+
 def send_frames(host, port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
@@ -36,13 +47,15 @@ def send_frames(host, port):
     while True:
         rgb_frame, depth_frame = get_frames("./INFERENCE/rgb/sample/0001_0/00001.jpg", "./INFERENCE/depth/sample/0001_0/00001.jpg")
         
+        # Encode frames before sending
+        _, encoded_rgb_frame = cv2.imencode('.jpg', rgb_frame)
+        _, encoded_depth_frame = cv2.imencode('.jpg', depth_frame)
+
         # Sending RGB Frame
-        client_socket.sendall(b'RGB')
-        client_socket.sendall(rgb_frame)
+        send_frame(client_socket, b'RGB', encoded_rgb_frame.tobytes())
 
         # Sending Depth Frame
-        client_socket.sendall(b'DEPTH')
-        client_socket.sendall(depth_frame)
+        send_frame(client_socket, b'DEPTH', encoded_depth_frame.tobytes())
 
         if cv2.waitKey(1) & 0xFF == ord('0'):
             break
