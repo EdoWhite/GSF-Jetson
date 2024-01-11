@@ -8,26 +8,18 @@ import sys
 import argparse
 
 def get_frames(rgb_path, depth_path):
-    # Load RGB frame
-    rgb_frame = cv2.imread(rgb_path, cv2.IMREAD_COLOR)  # Load as a color image
+    # Load the RGB frame as a color image
+    rgb_frame = cv2.imread(rgb_path, cv2.IMREAD_COLOR)
     if rgb_frame is None:
         raise ValueError(f"Failed to load RGB frame from {rgb_path}")
 
-    # Load Depth frame
-    depth_frame = cv2.imread(depth_path, cv2.IMREAD_UNCHANGED)  # Load without any color conversion
+    # Load the Depth frame as is (without any color conversion)
+    depth_frame = cv2.imread(depth_path, cv2.IMREAD_UNCHANGED)
     if depth_frame is None:
         raise ValueError(f"Failed to load Depth frame from {depth_path}")
 
-    # Encode the frames before sending
-    ret, encoded_rgb_frame = cv2.imencode('.jpg', rgb_frame)
-    if not ret:
-        raise ValueError("Failed to encode RGB frame")
+    return rgb_frame, depth_frame
 
-    ret, encoded_depth_frame = cv2.imencode('.jpg', depth_frame)
-    if not ret:
-        raise ValueError("Failed to encode Depth frame")
-
-    return encoded_rgb_frame.tobytes(), encoded_depth_frame.tobytes()
 
 def send_frame(client_socket, frame_type, frame):
     # Send frame type (e.g., 'RGB' or 'DEPTH')
