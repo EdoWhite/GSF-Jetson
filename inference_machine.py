@@ -70,9 +70,9 @@ def receive_frames(host, port):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Receive frames over a network.')
-    parser.add_argument('--ports', nargs='+', type=int, required=True, help='List of port numbers for communication with cameras.')
+    parser.add_argument('--port', type=int, required=True, help='List of port numbers for communication with cameras.')
     args = parser.parse_args()
-    receiver_ports = args.ports
+    receiver_port = args.port
 
-    HOST, PORT = "0.0.0.0", receiver_ports  # Bind to all interfaces
+    HOST, PORT = "0.0.0.0", receiver_port  # Bind to all interfaces
     receive_frames(HOST, PORT)
