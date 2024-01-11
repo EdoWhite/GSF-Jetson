@@ -6,6 +6,7 @@ import socket
 import cv2
 import sys
 import argparse
+import keyboard
 
 def get_frames(rgb_path, depth_path):
     # Load the RGB frame as a color image
@@ -37,6 +38,9 @@ def send_frames(host, port):
     client_socket.connect((host, port))
 
     while True:
+        if keyboard.is_pressed('0'):  # Check if '0' is pressed
+            break
+        
         rgb_frame, depth_frame = get_frames("./INFERENCE/rgb/sample/0001_0/00001.jpg", "./INFERENCE/depth/sample/0001_0/00001.jpg")
         
         # Encode frames before sending
@@ -48,9 +52,6 @@ def send_frames(host, port):
 
         # Sending Depth Frame
         send_frame(client_socket, b'DEPTH', encoded_depth_frame.tobytes())
-
-        if cv2.waitKey(1) & 0xFF == ord('0'):
-            break
 
     # Sending the termination flag
     client_socket.sendall(b'STOP')
