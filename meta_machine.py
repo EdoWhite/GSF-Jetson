@@ -6,7 +6,18 @@ import socket
 import cv2
 import sys
 import argparse
-import keyboard
+from pynput import keyboard
+
+stop_flag = False
+
+def on_press(key):
+    global stop_flag
+    try:
+        if key.char == '0':  # Detect '0' key press
+            stop_flag = True
+            return False  # Returning False to stop the listener
+    except AttributeError:
+        pass  # Handle different types of keys
 
 def get_frames(rgb_path, depth_path):
     # Load the RGB frame as a color image
@@ -34,13 +45,15 @@ def send_frame(client_socket, frame_type, frame):
     client_socket.sendall(frame)
 
 def send_frames(host, port):
+    global stop_flag
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
 
-    while True:
-        if keyboard.is_pressed('0'):  # Check if '0' is pressed
-            break
-        
+    # Start the keyboard listener
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
+
+    while not stop_flag:
         rgb_frame, depth_frame = get_frames("./INFERENCE/rgb/sample/0001_0/00001.jpg", "./INFERENCE/depth/sample/0001_0/00001.jpg")
         
         # Encode frames before sending
