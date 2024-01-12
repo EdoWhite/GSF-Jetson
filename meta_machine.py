@@ -53,9 +53,6 @@ def send_frames(host, port):
         # Sending Depth Frame
         send_frame(client_socket, b'DEPTH', encoded_depth_frame.tobytes())
 
-        if cv2.waitKey(1) & 0xFF == ord('0'):
-            break
-
     # Sending the termination flag
     client_socket.sendall(b'STOP')
 
