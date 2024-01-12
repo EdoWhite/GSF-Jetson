@@ -72,8 +72,10 @@ if __name__ == "__main__":
     ip = args.receiver_ip
 
     HOST, PORT = ip, port
-    cv2.namedWindow("Press 0 to stop", cv2.WINDOW_NORMAL)
+    window_name = "Press 0 to stop"
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(window_name, 1024, 1024)
     background_image = cv2.imread('./images/background.png') 
-    cv2.imshow("Press 0 to stop", background_image)
+    cv2.imshow(window_name, background_image)
 
     send_frames(HOST, PORT)
