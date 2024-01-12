@@ -6,18 +6,6 @@ import socket
 import cv2
 import sys
 import argparse
-from pynput import keyboard
-
-stop_flag = False
-
-def on_press(key):
-    global stop_flag
-    try:
-        if key.char == '0':  # Detect '0' key press
-            stop_flag = True
-            return False  # Returning False to stop the listener
-    except AttributeError:
-        pass  # Handle different types of keys
 
 def get_frames(rgb_path, depth_path):
     # Load the RGB frame as a color image
@@ -32,7 +20,6 @@ def get_frames(rgb_path, depth_path):
 
     return rgb_frame, depth_frame
 
-
 def send_frame(client_socket, frame_type, frame):
     # Send frame type (e.g., 'RGB' or 'DEPTH')
     client_socket.sendall(frame_type)
@@ -45,15 +32,10 @@ def send_frame(client_socket, frame_type, frame):
     client_socket.sendall(frame)
 
 def send_frames(host, port):
-    global stop_flag
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
 
-    # Start the keyboard listener
-    listener = keyboard.Listener(on_press=on_press)
-    listener.start()
-
-    while not stop_flag:
+    while True:
         rgb_frame, depth_frame = get_frames("./INFERENCE/rgb/sample/0001_0/00001.jpg", "./INFERENCE/depth/sample/0001_0/00001.jpg")
         
         # Encode frames before sending
@@ -65,6 +47,9 @@ def send_frames(host, port):
 
         # Sending Depth Frame
         send_frame(client_socket, b'DEPTH', encoded_depth_frame.tobytes())
+
+        if cv2.waitKey(1) & 0xFF == ord('0'):
+            break
 
     # Sending the termination flag
     client_socket.sendall(b'STOP')
@@ -85,4 +70,8 @@ if __name__ == "__main__":
     ip = args.receiver_ip
 
     HOST, PORT = ip, port
+    cv2.namedWindow("Press 0 to stop", cv2.WINDOW_NORMAL)
+    background_image = cv2.imread('./images/background.png') 
+    cv2.imshow("Press 0 to stop", background_image)
+
     send_frames(HOST, PORT)
