@@ -40,7 +40,7 @@ def send_frames(host, port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
 
-    while not quit_keypress:
+    while not quit_keypress():
         rgb_frame, depth_frame = get_frames("./INFERENCE/rgb/sample/0001_0/00001.jpg", "./INFERENCE/depth/sample/0001_0/00001.jpg")
         
         # Encode frames before sending
