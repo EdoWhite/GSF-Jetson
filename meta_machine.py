@@ -7,6 +7,11 @@ import cv2
 import sys
 import argparse
 
+def quit_keypress():
+    key = cv2.waitKey(1)
+    # Press ESC, 'q'
+    return key == 27 or key == ord("q")
+
 def get_frames(rgb_path, depth_path):
     # Load the RGB frame as a color image
     rgb_frame = cv2.imread(rgb_path, cv2.IMREAD_COLOR)
@@ -35,7 +40,7 @@ def send_frames(host, port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
 
-    while True:
+    while not quit_keypress:
         rgb_frame, depth_frame = get_frames("./INFERENCE/rgb/sample/0001_0/00001.jpg", "./INFERENCE/depth/sample/0001_0/00001.jpg")
         
         # Encode frames before sending
