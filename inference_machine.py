@@ -59,11 +59,13 @@ def receive_frames(host, port):
         if data == b'RGB':
             rgb_frame = receive_and_assemble_frame(conn)
             if rgb_frame is not None:
+                print("Saving RGB")
                 save_frame(rgb_frame, 'rgb_frames')
 
         elif data == b'DEPTH':
             depth_frame = receive_and_assemble_frame(conn)
             if depth_frame is not None:
+                print("Saving DEPTH")
                 save_frame(depth_frame, 'depth_frames')
 
         elif data == b'STOP':

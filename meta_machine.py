@@ -49,9 +49,11 @@ def send_frames(host, port):
 
         # Sending RGB Frame
         send_frame(client_socket, b'RGB', encoded_rgb_frame.tobytes())
+        print("SENT RGB")
 
         # Sending Depth Frame
         send_frame(client_socket, b'DEPTH', encoded_depth_frame.tobytes())
+        print("SENT DEPTH")
 
     # Sending the termination flag
     client_socket.sendall(b'STOP')
